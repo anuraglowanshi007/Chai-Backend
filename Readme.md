@@ -15,3 +15,9 @@
 # HTTP Methods -> get, put, post , delete ,patch , head ,options, trace 
 # HTTPs Status code 
 # Aggrigate Piplines 
+
+Models - https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj
+
+
+// Incomming task after 12 pm 
+-> install mongoose , dotenv, express 
