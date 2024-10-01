@@ -1,34 +1,52 @@
-import {v2 as cloudinary} from cloudinary
-import fs from "fs" 
 
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
+
+// does not taking path from .env 
 cloudinary.config({
-  cloud_name:'process.env.CLOUD_NAME',
-  api_key:'process.env.API_KEY',
-  api_secret:'process.env.API_SECRET'
+    cloud_name:  "dzm0r3isf",
+    api_key: "568539712321726",
+    api_secret: "0zVN7bgpwT1EMu4YVrb_00dvtNA"
 });
 
-const uploadCloudinary = async(localFilePath)=>{
-  try{
-    if(!localFilePath) return null;
+const uploadOnCloudinary = async (localFilePath) => {
+    try {
+        if (!localFilePath) return null;
 
-    // upload the file on cloudinary
-    const response = await cloudinary.uploader.upload
-    (localFilePath,{
-      resource_type:'auto'
-    })
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: 'auto'
+        });
 
-    //file has been uploaded successfully
-    console.log("file is uploaded on cloudinary",response.url);
-    return response;
-  }
-  catch(error){
-    //remove locally saved temporary file as the upload operation  got failed 
-    fs.unlinkSync(localFilePath)
-    return null;
-  }
-}
+        console.log("File uploaded to Cloudinary:", response.url);
+        return response;
+    } catch (error) {
+        console.error("Error uploading to Cloudinary:", error.message);
+        // Check if the local file exists before attempting to delete it
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+            console.log("Temporary file deleted:", localFilePath);
+        } else {
+            console.warn("Temporary file not found for deletion:", localFilePath);
+        }
+        return null;
+    }
+};
 
-export {uploadCloudinary};
+export { uploadOnCloudinary };
+
+
+//     //file has been uploaded successfully
+//     console.log("file is uploaded on cloudinary",response.url);
+//     return response;
+//   }
+//   catch(error){
+//     //remove locally saved temporary file as the upload operation  got failed 
+//     fs.unlinkSync(localFilePath)
+//     return null;
+//   }
+// }
+
+// export {uploadOnCloudinary};
 
 
 // const cloudinary = require("cloudinary").v2
