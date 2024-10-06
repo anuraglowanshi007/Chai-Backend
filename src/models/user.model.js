@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+
 // Define the user schema with fields and configurations
 const userSchema = new Schema(
   {
@@ -87,6 +88,10 @@ userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password); // Returns true if passwords match, false otherwise
 };
 
+const ACCESS_TOKEN_SECRET = '12345';
+const REFRESH_TOKEN_SECRET = '123456';
+const ACCESS_TOKEN_EXPIRY = '1d'; // example expiry time
+const REFRESH_TOKEN_EXPIRY = '10d'; // example expiry time
 
 // Method to generate an access token for the user
 userSchema.methods.generateAccessToken = function () {
@@ -95,11 +100,13 @@ userSchema.methods.generateAccessToken = function () {
       _id: this._id, // Include the user's ID in the token payload
       email: this.email, // Include the user's email
       username: this.username, // Include the user's username
-      fullname: this.fullname, // Include the user's fullname
+      fullName: this.fullName, // Include the user's fullname
     },
-    process.env.ACCESS_TOKEN_SECRET, // Use the secret key for signing the access token
+    // process.env.ACCESS_TOKEN_SECRET,
+    ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY, // Set the expiry time for the access token (from environment variable)
+      // expiresIn: process.env.ACCESS_TOKEN_EXPIRY, // Set the expiry time for the access token (from environment variable)
+      expiresIn: ACCESS_TOKEN_EXPIRY,
     }
   );
 };
@@ -112,9 +119,11 @@ userSchema.methods.generateRefreshToken = function () {
     {
       _id: this._id, // Include the user's ID in the refresh token payload
     },
-    process.env.REFRESH_TOKEN_SECRET, // Use the secret key for signing the refresh token
+    // process.env.REFRESH_TOKEN_SECRET, // Use the secret key for signing the refresh token
+    REFRESH_TOKEN_SECRET,
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY, // Set the expiry time for the refresh token (from environment variable)
+      // expiresIn: process.env.REFRESH_TOKEN_EXPIRY, 
+      expiresIn: REFRESH_TOKEN_EXPIRY,
     }
   );
 };
