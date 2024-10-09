@@ -302,30 +302,37 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
  });
 
  // ChangePassword 
- const ChangeCurrentPassword = asyncHandler(async (req,res)=>{
-     const {oldPassword, newPassword,confPassword} = req.body;
-
-     if(!(newPassword===confPassword)){
-          throw new ApiError(400,"Invalid Old Password");   
+const ChangeCurrentPassword = asyncHandler(async (req, res) => {
+     // Destructure the required fields from req.body
+     const { oldPassword, newPassword, confPassword } = req.body;
+ 
+     // Check if newPassword matches confPassword
+     if (!(newPassword === confPassword)) {
+         throw new ApiError(400, "New password and confirm password do not match"); // Update the error message to reflect the issue (mismatch between new and confirm password)
      }
-
-     const user =  await User.findById(req.user?._id)
-
-    const isPasswordCorrect =  await user.isPasswordCorrect(oldPassword);
-
-    if(!isPasswordCorrect){
-     throw new ApiError(400,"Invalid Old Password");
-    }
-
-    user.password = newPassword;
-    await user.save({validateBeforeSave:false})
-
-    return res 
-    .status
-    .json(new ApiResponse(200,{},"Password Change Successfully"))
-
-
- })
+ 
+     // Fetch the user by ID from the request (ensure req.user._id is available)
+     const user = await User.findById(req.user?._id);
+ 
+     // Check if the old password matches the user's current password
+     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+ 
+     // If the old password is incorrect, return an error
+     if (!isPasswordCorrect) {
+         throw new ApiError(400, "Invalid Old Password"); 
+     }
+ 
+     // Set the new password for the user and save the user object
+     user.password = newPassword;
+     await user.save({ validateBeforeSave: false }); 
+ 
+     // Return success response after password change
+     return res
+         .status(200) 
+         .json(new ApiResponse(200, {}, "Password Changed Successfully")); 
+ });
+ 
+ 
 
  //get CurrentUser 
  const getCurrentUser = asyncHandler(async(req,res)=>{
@@ -334,32 +341,105 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
      .json(200, req.user ,"Current User Fetched SuccessFully");
  })
 
- //Update Account Details 
-  const updateAccountDetail = asyncHandler(async(req,res)=>{
-     const {fullName,email} = req.body;
-
-     if(!(email||fullName)){
-          throw new ApiError(400,"All Fields are required");
+ // Update Account Details
+const updateAccountDetail = asyncHandler(async (req, res) => {
+     // Destructure fullName and email from req.body
+     const { fullName, email } = req.body;
+ 
+     // Check if either email or fullName is provided; if neither, throw an error
+     if (!(email || fullName)) {
+         throw new ApiError(400, "At least one field (email or full name) is required"); 
      }
+ 
+     // Update user details using findByIdAndUpdate method
+     const user = await User.findByIdAndUpdate( 
+         req.user?._id, // Ensure req.user._id is available 
+         {
+             $set: {
+                 fullName,
+                 email
+             }
+         },
+         { new: true } 
+     ).select("-password"); 
+ 
+     
+     return res
+         .status(200) 
+         .json(new ApiResponse(200, user, "Account Details Updated Successfully"));
+ });
+  
 
-     const user = User.findByIdAndUpdate(
-          req.user?._id,
-          {
-               $set:{
-                    fullName,
-                    email
-               }
-          },
-          {new:true}
-     ).select("-password")
-
+ // Update User Avatar
+const updateUserAvatar = asyncHandler(async (req, res) => {
+     const avatarLocalPath = req.file?.path;
+ 
+     // Check if the avatar file is provided
+     if (!avatarLocalPath) {
+         throw new ApiError(400, "Avatar is Missing"); 
+     }
+ 
+     // Upload avatar to Cloudinary
+     const avatar = await uploadOnCloudinary(avatarLocalPath);
+     if (!avatar.url) {
+         throw new ApiError(400, "Error while Uploading Avatar"); 
+     }
+ 
+     // Update the user with the new avatar URL
+     const user = await user.findByIdAndUpdate(
+         req.body?._id, // Ensure _id is coming from req.body
+         {
+             $set: {
+                 avatar: avatar.url // Assign the uploaded URL to the avatar field
+             }
+         },
+         { new: true } // Return the updated user document
+     ).select("password"); 
+ 
      return res
       .status(200)
-      .json(new ApiResponse(200,user,"Account Details Updated Successfully"))
-  }) 
+      .json(new ApiResponse(200,user,"User Avatar Updated Successfully"))
+ });
+ 
+ // Update Cover Image
+ const updateUserCoverImage = asyncHandler(async (req, res) => {
+     const coverImageLocalPath = req.file?.path;
+ 
+     // Check if the cover image file is provided
+     if (!coverImageLocalPath) {
+         throw new ApiError(400, "CoverImage file is Missing");
+     }
+ 
+     // Upload cover image to Cloudinary
+     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+     if (!coverImage.url) {
+         throw new ApiError(400, "Error while Uploading CoverImage");
+     }
+ 
+     // Update the user with the new cover image URL
+     const user = await user.findByIdAndUpdate(
+         req.body?._id, // Ensure _id is coming from req.body
+         {
+             $set: {
+                 coverImage: coverImage.url // Assign the uploaded URL to the coverImage field
+             }
+         },
+         { new: true } // Return the updated user document
+     ).select("password"); 
+ 
+     return res
+      .status(200)
+      .json(new ApiResponse(200,user,"User CoverImage Updated Successfully"))
+ });
 
 
 
-
-export {registerUser ,loginUser,logoutUser,refreshAccessToken,
-     ChangeCurrentPassword,getCurrentUser,updateAccountDetail}
+export {registerUser ,
+     loginUser,logoutUser,
+     refreshAccessToken,
+     ChangeCurrentPassword,
+     getCurrentUser,
+     updateAccountDetail,
+     updateUserAvatar,
+     updateUserCoverImage
+}
