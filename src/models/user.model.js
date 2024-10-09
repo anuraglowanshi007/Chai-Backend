@@ -25,7 +25,7 @@ const userSchema = new Schema(
       trim: true,
     },
     
-    // Fullname field: lowercase, trimmed, indexed, and required
+    // Fullname field: lowercase, trimmed, indexed, and required  
     fullName: {
       type: String,
       required: true,
